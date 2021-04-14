@@ -1,9 +1,5 @@
 import { IUserCreate, IUserLogin } from "rest/users";
 
-const validateEmail = (email: string): boolean => {
-  return email.includes("@");
-};
-
 const validateName = (name: string): boolean => {
   return name.length > 2;
 };
@@ -19,29 +15,11 @@ const validatePasswordMatch = (
   return password1 === password2;
 };
 
-const validateAccountCreate = ({
-  email,
-  firstname,
-  lastname,
-  password,
-  password2,
-}: IUserCreate) => {
-  if (!validateEmail(email))
-    return {
-      success: false,
-      err: "Email needs an @",
-    };
-
-  if (!validateName(firstname))
+const validateAccountCreate = ({ name, password, password2 }: IUserCreate) => {
+  if (!validateName(name))
     return {
       success: false,
       err: "First name needs to be longer than 3 characters",
-    };
-
-  if (!validateName(lastname))
-    return {
-      success: false,
-      err: "Last name needs to be longer than 3 characters",
     };
 
   if (!validatePassword(password))
@@ -60,13 +38,7 @@ const validateAccountCreate = ({
   };
 };
 
-const validateAccountLogin = ({ email, password }: IUserLogin) => {
-  if (!validateEmail(email))
-    return {
-      success: false,
-      err: "Email needs an @",
-    };
-
+const validateAccountLogin = ({ password }: IUserLogin) => {
   if (!validatePassword(password))
     return {
       success: false,

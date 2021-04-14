@@ -4,10 +4,8 @@ import API from "rest/api";
 
 const defaultUser = {
   id: 0,
-  firstname: "",
-  lastname: "",
+  name: "",
   role: "",
-  photo: "",
   accessToken: "",
 } as IUser;
 

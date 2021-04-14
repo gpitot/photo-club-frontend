@@ -1,159 +1,58 @@
 import React, { useState, useContext } from "react";
-import { useFlags } from "@atlaskit/flag";
-import SuccessIcon from "@atlaskit/icon/glyph/check-circle";
-import { G400 } from "@atlaskit/theme/colors";
-import ErrorIcon from "@atlaskit/icon/glyph/error";
-import { R400 } from "@atlaskit/theme/colors";
-import { Link, useHistory } from "react-router-dom";
 
 import { UserContext } from "contexts/UserContext";
 import { validateAccountCreate } from "utils/validation";
 import API from "rest/api";
 import { IUserCreate } from "rest/users";
-import Information from "components/Information";
-import Input from "components/Input";
-import Button from "components/Button";
-import style from "./style.module.scss";
+import { useHistory, Link } from "react-router-dom";
 
-const emptyUser = {
-  email: "",
-  phone: "",
-  firstname: "",
-  lastname: "",
-  password: "",
-  password2: "",
-} as IUserCreate;
+import style from "./style.module.scss";
+import Form, { IFieldsObj } from "components/Form";
 
 const CreateUser = () => {
   const history = useHistory();
-  const { showFlag } = useFlags();
-  const { setUser } = useContext(UserContext);
 
-  const [loading, setLoading] = useState(false);
-  const [form, setForm] = useState<IUserCreate>(emptyUser);
+  const url = new URL(window.location.href);
+  const params = new URLSearchParams(url.search);
+  const redirect = params.get("redirect");
+  const path = redirect ? redirect : "/";
+  const { user, setUser } = useContext(UserContext);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const valid = validateAccountCreate(form);
-
-    if (valid.success) {
-      setLoading(true);
-      API.users.create(form).then((res) => {
-        if (res.success) {
-          setUser(res.user);
-          window.localStorage.setItem("token", res.user.accessToken);
-          showFlag({
-            isAutoDismiss: true,
-            title: "Account created",
-            icon: <SuccessIcon label="success" secondaryColor={G400} />,
-            appearance: "success",
-          });
-          history.push("/");
-        } else {
-          showFlag({
-            isAutoDismiss: true,
-            title: "That email address is already in use",
-            icon: <ErrorIcon label="error" secondaryColor={R400} />,
-
-            appearance: "error",
-          });
-          setLoading(false);
-        }
-      });
-    } else {
-      showFlag({
-        isAutoDismiss: true,
-        title: valid.err,
-        icon: <ErrorIcon label="error" secondaryColor={R400} />,
-
-        appearance: "error",
-      });
-    }
-  };
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setForm({
-      ...form,
-      [name]: value,
-    });
-  };
-
-  if (loading) {
-    return (
-      <Information>
-        <h1>Creating your account...</h1>
-      </Information>
-    );
+  if (user.id) {
+    history.push(path);
   }
 
-  return (
-    <Information>
-      <h1>Create an account</h1>
-
-      <form>
-        <div className={style.inputWrapper}>
-          <Input
-            label="Email address"
-            value={form["email"]}
-            handleChange={handleChange}
-            name="email"
-            type="email"
-          />
-        </div>
-        <div className={style.inputWrapper}>
-          <Input
-            label="Phone"
-            value={form["phone"]}
-            handleChange={handleChange}
-            name="phone"
-            type="text"
-          />
-        </div>
-        <div className={style.inputWrapper}>
-          <Input
-            label="First name"
-            value={form["firstname"]}
-            handleChange={handleChange}
-            name="firstname"
-            type="text"
-          />
-        </div>
-        <div className={style.inputWrapper}>
-          <Input
-            label="Last name"
-            value={form["lastname"]}
-            handleChange={handleChange}
-            name="lastname"
-            type="text"
-          />
-        </div>
-        <div className={style.inputWrapper}>
-          <Input
-            label="Password"
-            value={form["password"]}
-            handleChange={handleChange}
-            name="password"
-            type="password"
-          />
-        </div>
-        <div className={style.inputWrapper}>
-          <Input
-            label="Confirm password"
-            value={form["password2"]}
-            handleChange={handleChange}
-            name="password2"
-            type="password"
-          />
-        </div>
-        <Button text="Create Account" handleClick={handleSubmit} />
-      </form>
-
-      <Link to="/login" className={style.login}>
-        Already have an account? Log in here
-      </Link>
-    </Information>
-  );
+  const handleSubmit = (fields: IFieldsObj) => {
+    const data = (fields as unknown) as IUserCreate;
+    console.log(data);
+    API.users.create(data).then((res) => {
+      if (res.success) {
+        setUser(res.user);
+        window.localStorage.setItem("token", res.user.accessToken);
+      }
+    });
+  };
+  const fields = [
+    {
+      name: "name",
+      value: "",
+      type: "text",
+      label: "Name",
+    },
+    {
+      name: "password",
+      value: "",
+      type: "password",
+      label: "Password",
+    },
+    {
+      name: "password2",
+      value: "",
+      type: "password",
+      label: "Validate Password",
+    },
+  ];
+  return <Form onSubmit={handleSubmit} initialFields={fields} />;
 };
 
 export default CreateUser;

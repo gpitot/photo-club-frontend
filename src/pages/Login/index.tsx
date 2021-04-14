@@ -1,29 +1,16 @@
 import React, { useState, useContext } from "react";
-import { useFlags } from "@atlaskit/flag";
-import SuccessIcon from "@atlaskit/icon/glyph/check-circle";
-import { G400 } from "@atlaskit/theme/colors";
-import ErrorIcon from "@atlaskit/icon/glyph/error";
-import { R400 } from "@atlaskit/theme/colors";
-import { useHistory, Link } from "react-router-dom";
 
 import { UserContext } from "contexts/UserContext";
-import { validateAccountLogin } from "utils/validation";
+import { validateAccountCreate } from "utils/validation";
 import API from "rest/api";
-import { IUserLogin } from "rest/users";
-import Information from "components/Information";
-import Input from "components/Input";
-import Button from "components/Button";
-import style from "pages/CreateUser/style.module.scss";
+import { IUserCreate } from "rest/users";
+import { useHistory, Link } from "react-router-dom";
 
-const emptyUser = {
-  email: "",
-
-  password: "",
-} as IUserLogin;
+import style from "./style.module.scss";
+import Form, { IFieldsObj } from "components/Form";
 
 const Login = () => {
   const history = useHistory();
-  const { showFlag } = useFlags();
 
   const url = new URL(window.location.href);
   const params = new URLSearchParams(url.search);
@@ -31,104 +18,34 @@ const Login = () => {
   const path = redirect ? redirect : "/";
   const { user, setUser } = useContext(UserContext);
 
-  const [loading, setLoading] = useState(false);
-  const [form, setForm] = useState<IUserLogin>(emptyUser);
-
   if (user.id) {
     history.push(path);
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const valid = validateAccountLogin(form);
-
-    if (valid.success) {
-      setLoading(true);
-      API.users
-        .login(form)
-        .then((res) => {
-          if (res.success) {
-            setUser(res.user);
-            window.localStorage.setItem("token", res.user.accessToken);
-            showFlag({
-              isAutoDismiss: true,
-              title: "Logged in",
-              icon: <SuccessIcon label="success" secondaryColor={G400} />,
-              appearance: "success",
-            });
-
-            history.push(path);
-          } else {
-            showFlag({
-              isAutoDismiss: true,
-              title: "Invalid login details",
-              icon: <ErrorIcon label="error" secondaryColor={R400} />,
-
-              appearance: "error",
-            });
-          }
-        })
-        .finally(() => {
-          setLoading(false);
-        });
-    } else {
-      showFlag({
-        isAutoDismiss: true,
-        title: valid.err,
-        icon: <ErrorIcon label="error" secondaryColor={R400} />,
-
-        appearance: "error",
-      });
-    }
-  };
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setForm({
-      ...form,
-      [name]: value,
+  const handleSubmit = (fields: IFieldsObj) => {
+    const data = (fields as unknown) as IUserCreate;
+    API.users.login(data).then((res) => {
+      if (res.success) {
+        setUser(res.user);
+        window.localStorage.setItem("token", res.user.accessToken);
+      }
     });
   };
-
-  if (loading) {
-    return (
-      <Information>
-        <h1>Logging you in...</h1>
-      </Information>
-    );
-  }
-
-  return (
-    <Information>
-      <h1>Log in</h1>
-
-      <form>
-        <div className={style.inputWrapper}>
-          <Input
-            label="Email address"
-            value={form["email"]}
-            handleChange={handleChange}
-            name="email"
-            type="email"
-          />
-        </div>
-        <div className={style.inputWrapper}>
-          <Input
-            label="Password"
-            value={form["password"]}
-            handleChange={handleChange}
-            name="password"
-            type="password"
-          />
-        </div>
-        <Button text="Log in" handleClick={handleSubmit} />
-      </form>
-
-      <Link to="/create" className={style.login}>
-        Need to make an account? Create one here here
-      </Link>
-    </Information>
-  );
+  const fields = [
+    {
+      name: "name",
+      value: "",
+      type: "text",
+      label: "Name",
+    },
+    {
+      name: "password",
+      value: "",
+      type: "password",
+      label: "Password",
+    },
+  ];
+  return <Form onSubmit={handleSubmit} initialFields={fields} />;
 };
 
 export default Login;

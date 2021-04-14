@@ -8,25 +8,19 @@ import {
 
 export interface IUser {
   id: number;
-  firstname: string;
-  lastname: string;
-  photo: string;
+  name: string;
   role: string;
   accessToken: string;
 }
 
 export interface IUserCreate {
-  email: string;
-  firstname: string;
-  lastname: string;
+  name: string;
   password: string;
   password2: string;
-  photo?: string;
-  phone: string;
 }
 
 export interface IUserLogin {
-  email: string;
+  name: string;
   password: string;
 }
 
@@ -43,17 +37,6 @@ const api = {
           userCheck: true,
         },
       })
-      .then((res) => {
-        return res.data;
-      });
-  },
-
-  get: (userid: string) => {
-    return axios
-      .get<null, IJsonResponse<IUserResponse>>(
-        `${BASE_URL}/users/user/${userid}`,
-        commonAxiosConfig
-      )
       .then((res) => {
         return res.data;
       });
